@@ -2,6 +2,10 @@ package com.hights.managerfile.UploadController;
 
 
 import com.hights.managerfile.Util.Const;
+import org.apache.commons.lang3.StringUtils;
+import org.jodconverter.DocumentConverter;
+import org.jodconverter.office.OfficeException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -20,12 +24,16 @@ import java.util.Random;
 
 
 @Controller
-
 public class FileUploadController {
+
+    @Autowired
+    private DocumentConverter documentConverter;
+
 
     @Value("${upload.maxfile}")
     private String maxfile;
-
+    @Value("${upload.path}")
+    private String rootpath;
     /*
      * 获取file.html页面
      */
@@ -38,8 +46,8 @@ public class FileUploadController {
      */
     @RequestMapping("fileUpload")
     @ResponseBody
-    public String fileUpload(@RequestParam("fileName")MultipartFile file) throws IOException {
-        String path = Const.path;
+    public String fileUpload(@RequestParam("file")MultipartFile file) throws IOException {
+        String path =rootpath;
         String fileName = file.getOriginalFilename();
         if(file.isEmpty() &&fileName.isEmpty()){
             return "false";
@@ -49,7 +57,6 @@ public class FileUploadController {
         if (size>Integer.parseInt( maxfile ) ){
             return "文件不能超过85m";
         }
-
         //根据日期生成文件夹
         String pagepath =pagepath();
         //根据时间生成文件名
@@ -65,20 +72,63 @@ public class FileUploadController {
             }
 
         }
-
         try {
             file.transferTo(dest); //保存文件
-            return "true";
-        } catch (IllegalStateException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-            return "false";
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
+            String subfix = getExtension(dest.getPath());
+            if ((subfix.indexOf("xls") != -1) || (subfix.indexOf("docx") != -1) || (subfix.indexOf("ppt") != -1) || (subfix.indexOf("docx") != -1)) {
+                if (!StringUtils.isEmpty(dest.getName()))
+                {
+                    File target = new File(getExtensiontow(dest.getPath(), "") + ".pdf");
+                    if (!target.exists()) {
+                        try {
+                            documentConverter.convert(dest).to(target).execute();
+                            dest.delete();
+                            return "/uploadFiles/uploadFile/" + Const.pagepath() + "/" + target.getName();
+                        } catch (OfficeException e) {
+                            e.printStackTrace();
+                            return "false";
+                        }
+                    }
+                }
+                return "false";
+            }
+            return "/uploadFiles/uploadFile/" + Const.pagepath() + "/" + dest.getName();
+        }
+        catch (IllegalStateException e)
+        {
             e.printStackTrace();
             return "false";
         }
+        catch (IOException e) {
+            e.printStackTrace();
+        }return "false";
     }
+
+    public String getExtension(String filename)
+    {
+        return getExtension(filename, "");
+    }
+    public String getExtension(String filename, String defExt) {
+        if ((filename != null) && (filename.length() > 0)) {
+            int i = filename.lastIndexOf('.');
+
+            if ((i > -1) && (i < filename.length() - 1)) {
+                return filename.substring(i + 1);
+            }
+        }
+        return defExt;
+    }
+    public String getExtensiontow(String filename, String defExt) {
+        if ((filename != null) && (filename.length() > 0)) {
+            int i = filename.lastIndexOf('.');
+
+            if ((i > -1) && (i < filename.length() - 1)) {
+                return filename.substring(0, i);
+            }
+        }
+        return defExt;
+    }
+
 
     /*
      * 获取multifile.html页面
