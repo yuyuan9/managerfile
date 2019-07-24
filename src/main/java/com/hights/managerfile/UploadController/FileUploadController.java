@@ -41,6 +41,8 @@ public class FileUploadController {
     public String file(){
         return "/file";
     }
+
+
     /**
      * 实现文件上传
      */
@@ -75,7 +77,7 @@ public class FileUploadController {
         try {
             file.transferTo(dest); //保存文件
             String subfix = getExtension(dest.getPath());
-            if ((subfix.indexOf("xls") != -1) || (subfix.indexOf("docx") != -1) || (subfix.indexOf("ppt") != -1) || (subfix.indexOf("docx") != -1)) {
+            if ((subfix.indexOf("xls") != -1) || (subfix.indexOf("docx") != -1) || (subfix.indexOf("ppt") != -1) || (subfix.indexOf("doc") != -1)) {
                 if (!StringUtils.isEmpty(dest.getName()))
                 {
                     File target = new File(getExtensiontow(dest.getPath(), "") + ".pdf");
