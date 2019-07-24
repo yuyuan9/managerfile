@@ -168,7 +168,7 @@ public class FileUploadController {
                 String filepaht =getUploadFileName();
                 String extName = file.getOriginalFilename().substring(file.getOriginalFilename().lastIndexOf("."));
                 filepaht+=extName;
-                String path = Const.path;
+                String path = rootpath;
                 path=path+"/"+pagepath;
                 File dest = new File(path,filepaht);
                 if (!dest.exists()) {
@@ -207,7 +207,7 @@ public class FileUploadController {
 
     @RequestMapping("download")
     public String downLoad(HttpServletResponse response,String filename ){
-        String path = Const.path;
+        String path = rootpath;
         File file = new File(path + "/" + filename);
         if(file.exists()){ //判断文件父目录是否存在
             response.setContentType("application/force-download");
