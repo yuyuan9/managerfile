@@ -2,6 +2,7 @@ package com.hights.managerfile.UploadController;
 
 
 import com.hights.managerfile.Util.Const;
+import com.hights.managerfile.Util.ZipUtil;
 import org.apache.commons.lang3.StringUtils;
 import org.jodconverter.DocumentConverter;
 import org.jodconverter.office.OfficeException;
@@ -17,7 +18,9 @@ import org.springframework.web.multipart.MultipartHttpServletRequest;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.*;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
@@ -49,7 +52,7 @@ public class FileUploadController {
     @RequestMapping("fileUpload")
     @ResponseBody
     public String fileUpload(@RequestParam("file")MultipartFile file) throws IOException {
-        String path =rootpath;
+        String path =rootpath+"/uploadFiles/uploadFile";
         String fileName = file.getOriginalFilename();
         if(file.isEmpty() &&fileName.isEmpty()){
             return "false";
@@ -67,12 +70,10 @@ public class FileUploadController {
         filepaht+=extName;
         path=path+"/"+pagepath;
         File dest = new File(path,filepaht);
-
         if (!dest.exists()) {
             if (!dest.getParentFile().exists()) {
                 dest.getParentFile().mkdirs();
             }
-
         }
         try {
             file.transferTo(dest); //保存文件
@@ -85,7 +86,7 @@ public class FileUploadController {
                         try {
                             documentConverter.convert(dest).to(target).execute();
                             dest.delete();
-                            return "/uploadFiles/uploadFile/" + Const.pagepath() + "/" + target.getName();
+                            return "/uploadFiles/uploadFile/" + pagepath + "/" + target.getName();
                         } catch (OfficeException e) {
                             e.printStackTrace();
                             return "false";
@@ -94,7 +95,7 @@ public class FileUploadController {
                 }
                 return "false";
             }
-            return "/uploadFiles/uploadFile/" + Const.pagepath() + "/" + dest.getName();
+            return "/uploadFiles/uploadFile/" +pagepath + "/" + dest.getName();
         }
         catch (IllegalStateException e)
         {
@@ -131,7 +132,103 @@ public class FileUploadController {
         return defExt;
     }
 
+    //将多个文件打压成一个压缩包
+    @RequestMapping("filezip")
+    @ResponseBody
+    public  String filezip (String pathurl)  {
+        List<File> fileList = new ArrayList<>();
+        String [] paths = pathurl.split( "," );
+        for(String path: paths){
+            File dest = new File(rootpath+"/"+path);
+            if(dest.exists()){
+                fileList.add( dest );
+            }else{
+               return "false";
+            }
+        }
+        FileOutputStream fos2 = null;
+        try {
+            String folr = pagepath();
+            String pagepath = rootpath+"/uploadFiles/uploadFile/"+folr+"/"+getUploadFileName()+".zip";
+            File file = new File(pagepath);
+            if(!file.exists()){
+                if (!file.getParentFile().exists()) {
+                    file.getParentFile().mkdirs();
+                }
+            }
+            fos2 = new FileOutputStream(file);
+            ZipUtil.toZip(fileList, fos2);
+            return "/uploadFiles/uploadFile/" +folr+ "/" + file.getName();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return "false";
+        }
+    }
+       /* for(int i=0;i<paths.length;i++){
+            try {
+                File source = new File(rootpath+"/"+paths[i]);
+                File dest = new File(rootpath+"/"+folder+"/"+folder+"/"+source.getName());
+                if(!dest.exists()){
+                    if (!dest.getParentFile().exists()) {
+                        dest.getParentFile().mkdirs();
+                    }
+                }
+                Files.copy(source.toPath(), dest.toPath());
+            }catch (Exception e){
+                e.printStackTrace();
+            }
 
+        }
+*/
+
+
+  /*  public static void main(String[] arg){
+        List<File> fileList = new ArrayList<>();
+        fileList.add(new File("C:/Users/lhy/Desktop/启信宝.txt"));
+        fileList.add(new File("C:/Users/lhy/Desktop/复习.docx"));
+        FileOutputStream fos2 = null;
+        try {
+            String pagepath = "C:/Users/lhy/Desktop/test.zip";
+            File file = new File(pagepath);
+            if(!file.exists()){
+                if (!file.getParentFile().exists()) {
+                    file.getParentFile().mkdirs();
+                }
+            }
+            fos2 = new FileOutputStream(file);
+            ZipUtil.toZip(fileList, fos2);
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+    }
+*/
+
+/*  public static void main(String[] arg){
+      File  file = new File("E:/filepath/uploadFiles/uploadFile/20190725/20190725102836378565924.txt");
+      System.out.println(file.getParent()  );
+      System.out.println(file.getAbsolutePath()  );
+      System.out.println(file.getName() );
+      System.out.println(file.getPath());
+
+  }*/
+
+//    public static void main(String[] arg){
+//      /String folder =getUploadFileName();*/
+//        File source =  new File( "E:/filepath/test.txt" );
+//        File dest = new File("E:/filepath"+"/"+folder+"/" + source.getName());
+//        if(!dest.exists()){
+//            if (!dest.getParentFile().exists()) {
+//                dest.getParentFile().mkdirs();
+//            }
+//        }
+//        try {
+//            Files.copy(source.toPath(), dest.toPath());
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//    }
     /*
      * 获取multifile.html页面
      */
