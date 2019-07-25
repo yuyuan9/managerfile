@@ -8,6 +8,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.MultipartConfigFactory;
 import org.springframework.boot.web.servlet.ServletComponentScan;
+import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.context.annotation.Bean;
 
 import javax.servlet.MultipartConfigElement;
@@ -15,7 +16,7 @@ import javax.servlet.MultipartConfigElement;
 @SpringBootApplication
 @ServletComponentScan
 
-public class ManagerfileApplication {
+public class ManagerfileApplication  extends SpringBootServletInitializer {
 
     @Value("${upload.filesize}")
     private String filesize;
